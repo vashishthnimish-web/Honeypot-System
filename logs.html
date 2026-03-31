@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SSH Honeypot Logs</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .navbar-brand {
+            font-weight: bold;
+        }
+        .log-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+        .log-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 15px 15px 0 0;
+        }
+        .log-entry {
+            padding: 12px 20px;
+            border-bottom: 1px solid #e9ecef;
+            transition: background-color 0.2s;
+        }
+        .log-entry:hover {
+            background-color: #f8f9fa;
+        }
+        .log-entry:last-child {
+            border-bottom: none;
+        }
+        .log-timestamp {
+            color: #6c757d;
+            font-size: 0.85rem;
+            font-family: monospace;
+        }
+        .log-message {
+            font-weight: 500;
+            margin: 5px 0;
+        }
+        .log-client {
+            color: #495057;
+            font-size: 0.9rem;
+        }
+        .badge-auth {
+            background-color: #dc3545;
+        }
+        .badge-connection {
+            background-color: #17a2b8;
+        }
+        .badge-command {
+            background-color: #28a745;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #6c757d;
+        }
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light">
+        <div class="container">
+            <a class="navbar-brand fw-bold text-primary" href="#">
+                <i class="fas fa-shield-alt me-2"></i>SSH Honeypot Dashboard
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link fw-semibold" href="{{ url_for('dashboard') }}">
+                    <i class="fas fa-tachometer-alt me-1"></i>Dashboard
+                </a>
+                <a class="nav-link active fw-semibold" href="{{ url_for('logs') }}">
+                    <i class="fas fa-list me-1"></i>Logs
+                </a>
+                <a class="nav-link fw-semibold" href="{{ url_for('settings') }}">
+                    <i class="fas fa-cog me-1"></i>Settings
+                </a>
+                <a class="nav-link fw-semibold text-danger" href="{{ url_for('logout') }}">
+                    <i class="fas fa-sign-out-alt me-1"></i>Logout
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="fw-bold text-primary mb-0">
+                <i class="fas fa-list me-2"></i>System Logs
+            </h2>
+            <a href="{{ url_for('export', format_type='csv') }}" class="btn btn-primary">
+                <i class="fas fa-download me-2"></i>Export CSV
+            </a>
+        </div>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="log-card">
+                    <div class="log-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-key"></i> Authentication Logs
+                        </h5>
+                    </div>
+                    <div class="log-entries">
+                        {% if auth_logs %}
+                            {% for log in auth_logs %}
+                                <div class="log-entry">
+                                    <div class="log-timestamp">{{ log.timestamp }}</div>
+                                    <div class="log-message">{{ log.message }}</div>
+                                    <span class="badge {% if 'Connection' in log.message %}badge-connection{% else %}badge-auth{% endif %}">
+                                        {% if 'Connection' in log.message %}
+                                            <i class="fas fa-plug"></i> Connection
+                                        {% else %}
+                                            <i class="fas fa-key"></i> Auth
+                                        {% endif %}
+                                    </span>
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="empty-state">
+                                <i class="fas fa-inbox"></i>
+                                <p>No authentication logs yet</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="log-card">
+                    <div class="log-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-terminal"></i> Command Logs
+                        </h5>
+                    </div>
+                    <div class="log-entries">
+                        {% if cmd_logs %}
+                            {% for log in cmd_logs %}
+                                <div class="log-entry">
+                                    <div class="log-timestamp">{{ log.timestamp }}</div>
+                                    <div class="log-client">
+                                        <i class="fas fa-user"></i> {{ log.client }}
+                                    </div>
+                                    <div class="log-message">
+                                        <code>{{ log.command }}</code>
+                                    </div>
+                                    <span class="badge badge-command">
+                                        <i class="fas fa-terminal"></i> Command
+                                    </span>
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="empty-state">
+                                <i class="fas fa-inbox"></i>
+                                <p>No command logs yet</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
